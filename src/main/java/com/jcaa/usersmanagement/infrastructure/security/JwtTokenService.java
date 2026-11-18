@@ -5,6 +5,9 @@ import com.jcaa.usersmanagement.domain.model.UserModel;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Base64;
@@ -17,6 +20,8 @@ import org.springframework.stereotype.Component;
 public class JwtTokenService {
 
   private static final String ROLE_CLAIM = "role";
+  private static final String DEFAULT_SECRET =
+      "ZGV2ZWxvcG1lbnQtb25seS1qd3Qtc2VjcmV0LW11c3QtYmUtcmVwbGFjZWQ=";
 
   private final SecretKey signingKey;
   private final long expirationSeconds;
@@ -28,9 +33,29 @@ public class JwtTokenService {
   }
 
   JwtTokenService(final JwtProperties properties, final Clock clock) {
-    this.signingKey = Keys.hmacShaKeyFor(Base64.getDecoder().decode(properties.secret()));
-    this.expirationSeconds = properties.expirationSeconds();
+    this.signingKey = Keys.hmacShaKeyFor(resolveKeyBytes(properties.secret()));
+    this.expirationSeconds =
+        properties.expirationSeconds() > 0 ? properties.expirationSeconds() : 900L;
     this.clock = clock;
+  }
+
+  private static byte[] resolveKeyBytes(final String rawSecret) {
+    final String candidate =
+        (rawSecret == null || rawSecret.isBlank()) ? DEFAULT_SECRET : rawSecret.trim();
+    try {
+      final byte[] decoded = Base64.getDecoder().decode(candidate);
+      if (decoded.length >= 32) {
+        return decoded;
+      }
+    } catch (final IllegalArgumentException ignored) {
+      // Fallback a SHA-256 si el valor no es Base64 estricto
+    }
+    try {
+      return MessageDigest.getInstance("SHA-256")
+          .digest(candidate.getBytes(StandardCharsets.UTF_8));
+    } catch (final NoSuchAlgorithmException e) {
+      throw new IllegalStateException("SHA-256 not available", e);
+    }
   }
 
   public String generate(final UserModel user) {
@@ -53,7 +78,8 @@ public class JwtTokenService {
             .build()
             .parseSignedClaims(token)
             .getPayload();
-    return new JwtPrincipal(claims.getSubject(), UserRole.fromString(claims.get(ROLE_CLAIM, String.class)));
+    return new JwtPrincipal(
+        claims.getSubject(), UserRole.fromString(claims.get(ROLE_CLAIM, String.class)));
   }
 
   public long expirationSeconds() {
