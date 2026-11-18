@@ -1,6 +1,7 @@
 FROM maven:3.9.11-eclipse-temurin-17 AS build
 
 WORKDIR /workspace
+RUN mkdir -p /root/.m2 && printf '<settings><mirrors><mirror><id>google-maven-central</id><name>Google Maven Central</name><url>https://maven-central.storage-download.googleapis.com/maven2/</url><mirrorOf>central</mirrorOf></mirror></mirrors></settings>\n' > /root/.m2/settings.xml
 COPY pom.xml ./
 COPY src ./src
 RUN mvn --batch-mode --no-transfer-progress clean package -DskipTests
