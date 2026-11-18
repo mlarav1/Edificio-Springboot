@@ -1,0 +1,214 @@
+{
+  "info": {
+    "_postman_id": "9f6351c4-83b0-4f7c-9c5d-ed1f1c102026",
+    "name": "CRUDL Edificios y Usuarios — Spring Boot Hexagonal DDD CQRS",
+    "description": "Colección de pruebas REST para autenticación JWT, gestión de Usuarios y CRUDL de Edificios en Spring Boot.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "edificio_id",
+      "value": "edf-001",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Health & Auth",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          }
+        },
+        {
+          "name": "Login Admin (Obtiene JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    const data = pm.response.json();",
+                  "    if (data.accessToken) {",
+                  "        pm.collectionVariables.set('jwt_token', data.accessToken);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"Admin1234!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Edificios (CRUDL)",
+      "item": [
+        {
+          "name": "Crear Edificio (POST /api/edificios)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"{{edificio_id}}\",\n  \"nombre\": \"Torre Empresarial Bocagrande\",\n  \"metrosCuadrados\": 4500.50,\n  \"altura\": 60.00,\n  \"numPisos\": 20,\n  \"numApartamentos\": 40,\n  \"numOficinas\": 10,\n  \"nombreParqueadero\": \"Parqueadero Subterraneo Norte\",\n  \"numPiscinas\": 2,\n  \"pais\": \"Colombia\",\n  \"departamento\": \"Bolívar\",\n  \"ciudad\": \"Cartagena\",\n  \"tieneAscensor\": true,\n  \"valorAdministracion\": 580000.00,\n  \"tieneZonaSocial\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/edificios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "edificios"]
+            }
+          }
+        },
+        {
+          "name": "Listar Edificios (GET /api/edificios)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/edificios",
+              "host": ["{{base_url}}"],
+              "path": ["api", "edificios"]
+            }
+          }
+        },
+        {
+          "name": "Obtener Edificio por ID (GET /api/edificios/{id})",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/edificios/{{edificio_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "edificios", "{{edificio_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Actualizar Edificio (PUT /api/edificios/{id})",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Torre Empresarial Bocagrande II\",\n  \"metrosCuadrados\": 4800.00,\n  \"altura\": 66.00,\n  \"numPisos\": 22,\n  \"numApartamentos\": 44,\n  \"numOficinas\": 12,\n  \"nombreParqueadero\": \"Parqueadero Subterraneo Central\",\n  \"numPiscinas\": 3,\n  \"pais\": \"Colombia\",\n  \"departamento\": \"Bolívar\",\n  \"ciudad\": \"Cartagena\",\n  \"tieneAscensor\": true,\n  \"valorAdministracion\": 620000.00,\n  \"tieneZonaSocial\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/edificios/{{edificio_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "edificios", "{{edificio_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Eliminar Edificio (DELETE /api/edificios/{id})",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{jwt_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/edificios/{{edificio_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "edificios", "{{edificio_id}}"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
