@@ -8,18 +8,18 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SmtpSpringConfig {
 
-  private static final String PROP_SMTP_HOST        = "${smtp.host}";
-  private static final String PROP_SMTP_PORT        = "${smtp.port}";
-  private static final String PROP_SMTP_USERNAME    = "${smtp.username}";
-  private static final String PROP_SMTP_PASSWORD    = "${smtp.password}";
-  private static final String PROP_SMTP_FROM        = "${smtp.from.address}";
-  private static final String PROP_SMTP_FROM_NAME   = "${smtp.from.name}";
+  private static final String PROP_SMTP_HOST = "${smtp.host:smtp.gmail.com}";
+  private static final String PROP_SMTP_PORT = "${smtp.port:587}";
+  private static final String PROP_SMTP_USERNAME = "${smtp.username:}";
+  private static final String PROP_SMTP_PASSWORD = "${smtp.password:}";
+  private static final String PROP_SMTP_FROM = "${smtp.from.address:}";
+  private static final String PROP_SMTP_FROM_NAME = "${smtp.from.name:Gestion de Edificios}";
 
   @Value(PROP_SMTP_HOST)
   private String smtpHost;
 
   @Value(PROP_SMTP_PORT)
-  private int smtpPort;
+  private String smtpPort;
 
   @Value(PROP_SMTP_USERNAME)
   private String smtpUsername;
@@ -35,7 +35,19 @@ public class SmtpSpringConfig {
 
   @Bean
   public SmtpConfig smtpConfig() {
-    return new SmtpConfig(smtpHost, smtpPort, smtpUsername, smtpPassword, smtpFromAddress, smtpFromName);
+    final int resolvedPort = parsePort(smtpPort, 587);
+    return new SmtpConfig(
+        smtpHost, resolvedPort, smtpUsername, smtpPassword, smtpFromAddress, smtpFromName);
+  }
+
+  private static int parsePort(final String rawPort, final int defaultPort) {
+    if (rawPort == null || rawPort.isBlank()) {
+      return defaultPort;
+    }
+    try {
+      return Integer.parseInt(rawPort.trim());
+    } catch (final NumberFormatException ignored) {
+      return defaultPort;
+    }
   }
 }
-
